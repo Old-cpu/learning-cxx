@@ -1,5 +1,5 @@
 ﻿#include "../exercise.h"
-#include <cstring>
+#include "cstring"
 
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
@@ -11,9 +11,10 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
-        std::memcpy(shape, shape_, 4 * sizeof(unsigned int));
-        size = shape[0] * shape[1] * shape[2] * shape[3];
-
+        for (int i = 0; i < 4; i++) {
+            size *= shape_[i];
+            shape[i] = shape_[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -32,37 +33,40 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
-        int oi, oj, ok, ol;
-        for(int i = 0; i < shape[0]; i++){
-            if(others.shape[0] != shape[0]){
-                oi = 0;
-            }else{
-                oi = i;
-            }
-            for(int j = 0; j < shape[1]; j++){
-                if(others.shape[1] != shape[1]){
-                    oj = 0;
-                }else{
-                    oj = j;
-                }
-                for(int k = 0; k < shape[2]; k++){
-                    if(others.shape[2] != shape[2]){
-                        ok = 0;
-                    }else{
-                        ok = k;
-                    }
-                    for(int l = 0; l < shape[3]; l++){
-                        if(others.shape[3] != shape[3]){
-                            ol = 0;
-                        }else{
-                            ol = l;
-                        }
-                        auto index = i * shape[1] * shape[2] * shape[3] + j * shape[2] * shape[3] + k * shape[3] + l;
-                        auto oindex = oi * others.shape[1] * others.shape[2] * others.shape[3] + oj * others.shape[2] * others.shape[3] + ok * others.shape[3] + ol;
-                        data[index] += others.data[oindex];
-                    }
-                }
-            }
+        for (int i = 0; i < 4; i++) {
+            if (shape[i] != others.shape[i] && (others.shape[i] != 1))
+                throw std::invalid_argument("Shape mismatch for broadcasting.");  
+        }
+
+        int shape0 = shape[0];
+        int shape1 = shape[1];
+        int shape2 = shape[2];
+        int shape3 = shape[3];
+
+        auto index = [shape0, shape1, shape2, shape3](int i, int j, int k, int r) {
+            return i * shape1 * shape2 * shape3 + j * shape2 * shape3 + k * shape3 + r;
+        };
+
+        for (int i = 0; i < shape0; i++) {
+            for (int j = 0; j < shape1; j++) {
+                for (int k = 0; k < shape2; k++) {
+                    for (int r = 0; r < shape3; r++) {
+                        unsigned int i_others = (others.shape[0] == 1 ? 0 : i);
+                        unsigned int j_others = (others.shape[1] == 1 ? 0 : j);
+                        unsigned int k_others = (others.shape[2] == 1 ? 0 : k);
+                        unsigned int r_others = (others.shape[3] == 1 ? 0 : r);
+
+                        int idx_this = index(i, j, k, r);
+
+                        unsigned int idx_others = i_others * others.shape[1] * others.shape[2] * others.shape[3] +
+                            j_others * others.shape[2] * others.shape[3] +
+                            k_others * others.shape[3] +
+                            r_others;
+                        
+                        this->data[idx_this] += others.data[idx_others];
+                    }   
+                }   
+            }    
         }
         return *this;
     }

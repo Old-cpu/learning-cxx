@@ -12,6 +12,12 @@ int main(int argc, char **argv) {
     //       - 连续存储；
     //       的张量占用的字节数
     // int size =
+
+    auto mul = [](int a, int b){
+        return a * b;
+    };
+    int size = std::accumulate(shape, &shape[4], 4, mul);
+
     ASSERT(size == 602112, "4x1x3x224x224 = 602112");
     return 0;
 }
