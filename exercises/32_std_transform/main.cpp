@@ -13,10 +13,11 @@ int main(int argc, char **argv) {
     auto mul_2 = [](int num)
     {
         return std::to_string(num * 2);
-    }
+    };
 
 
-    // std::vector<std::string> ans
+    //std::vector<std::string> ans0
+    std::transform(val.begin(), val.end(), ans.begin(), mul_2);
     ASSERT(ans.size() == val.size(), "ans size should be equal to val size");
     ASSERT(ans[0] == "16", "ans[0] should be 16");
     ASSERT(ans[1] == "26", "ans[1] should be 26");
